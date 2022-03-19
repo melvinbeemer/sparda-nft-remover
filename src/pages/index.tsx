@@ -83,7 +83,7 @@ const Home: NextPage = () => {
   return (
     <div className="flex flex-col h-screen items-center justify-center">
       <h1 className="text-xl font-bold mb-2">Sparda NFT Remover</h1>
-      <p className="max-w-xl">The Sparda Wallet team rugpulled leaving their users and creators in the dust. Additionally they removed all listings from their website. This tiny dApp aims to gives everyone the ability to remove their listings from the Sparda contract.</p>
+      <p className="max-w-xl">The Sparda Wallet team rugpulled leaving their users and creators in the dust. Additionally they removed all listings from their website. This tiny dApp aims to give everyone the ability to remove their listings from the Sparda contract.</p>
       {accountState.connected ? (
         <p className="text-gray-500 italic my-4">Logged in as {accountState.address}</p>
       ) : (
