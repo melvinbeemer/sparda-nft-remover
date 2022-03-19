@@ -94,8 +94,8 @@ const Home: NextPage = () => {
 
       <div className="max-w-xl w-full mt-6">
         <div className="flex items-center font-semibold">
-          <div className="flex-grow">Active orders: {activeOrders.length}</div>
-          <div>Total orders: {orders.length}</div>
+          <div className="flex-grow">Active listings: {activeOrders.length}</div>
+          <div>Total listings: {orders.length}</div>
         </div>
         <div className="">
           {activeOrders.map(order => (
