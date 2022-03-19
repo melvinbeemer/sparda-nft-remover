@@ -22,6 +22,7 @@ const Home: NextPage = () => {
     if(!accountState.address) return
     
     fetchUserData(accountState.address)
+    getOrderbook()
   // eslint-disable-next-line
   }, [accountState])
 
@@ -38,7 +39,8 @@ const Home: NextPage = () => {
     var userOrders: any[] = []
     for(const [key, value] of Object.entries(orderbook)) {
       var order: any = value
-      if(order.arguments[0] !== '0xa5ef483d289ae32f99cda38e52d01376bb8e60c4') continue
+      console.log(accountState.addressBase16)
+      if(order.arguments[0] !== accountState.addressBase16) continue
       order.listingId = key
       userOrders.push(order)
     }
@@ -74,6 +76,8 @@ const Home: NextPage = () => {
     txn.isRejected = function (this: { errors: any[]; exceptions: any[] }) {
       return this.errors.length > 0 || this.exceptions.length > 0
     }
+
+    setNonce(nonce+1)
   }
 
   return (
@@ -86,7 +90,7 @@ const Home: NextPage = () => {
         <WalletConnectButton />
       )}
 
-      <div className="w-96 mt-6">
+      <div className="max-w-xl w-full mt-6">
         <div className="flex items-center font-semibold">
           <div className="flex-grow">Active orders: {activeOrders.length}</div>
           <div>Total orders: {orders.length}</div>
@@ -103,7 +107,7 @@ const Home: NextPage = () => {
             </div>
           ))}
           {activeOrders.length === 0 &&
-            <p className="text-gray-500 italic">You have no active listings on the Sparda marketplace :)</p>
+            <p className="text-gray-500 italic text-center py-3">You have no active listings on the Sparda marketplace :)</p>
           }
         </div>
       </div>

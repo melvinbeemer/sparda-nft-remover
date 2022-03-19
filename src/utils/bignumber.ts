@@ -1,6 +1,16 @@
 import BigNumber from "bignumber.js";
 import { map, active } from "./currencies";
 
+export type MoneyFormatterOptions = {
+  currency?: any;
+  symbol?: string;
+  compression?: number;
+  decPlaces?: number;
+  maxFractionDigits?: number;
+  showCurrency?: boolean;
+  toHumanNumber?: boolean;
+}
+
 export const toBigNumber = (inputNumber: BigNumber | number | string = 0, opts: MoneyFormatterOptions = {}): BigNumber => {
   if (typeof inputNumber === "string") inputNumber = Number(inputNumber);
   if (typeof inputNumber === "number") {
