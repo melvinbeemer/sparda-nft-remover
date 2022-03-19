@@ -40,7 +40,7 @@ const Home: NextPage = () => {
     for(const [key, value] of Object.entries(orderbook)) {
       var order: any = value
       console.log(accountState.addressBase16)
-      if(order.arguments[0] !== accountState.addressBase16) continue
+      if(order.arguments[0] !== accountState.addressBase16?.toLowerCase()) continue
       order.listingId = key
       userOrders.push(order)
     }
