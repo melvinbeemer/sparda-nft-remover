@@ -10,11 +10,12 @@ const Home: NextPage = () => {
   let accountState = useSelector<RootState, AccountState>(state => state.account)
   let zilliqa = new Zilliqa('https://api.zilliqa.com')
   let [orders, setOrders] = useState<any[]>([])
+  let [zrc1Orders, setZrc1Orders] = useState<any[]>([])
   let [nonce, setNonce] = useState<number>(0)
 
   useEffect(() => {
     getOrderbook()
-    
+    getOrderbookZRC1()
   // eslint-disable-next-line
   }, [])
   
@@ -39,7 +40,6 @@ const Home: NextPage = () => {
     var userOrders: any[] = []
     for(const [key, value] of Object.entries(orderbook)) {
       var order: any = value
-      console.log(accountState.addressBase16)
       if(order.arguments[0] !== accountState.addressBase16?.toLowerCase()) continue
       order.listingId = key
       userOrders.push(order)
@@ -48,11 +48,58 @@ const Home: NextPage = () => {
     setOrders(userOrders)
   }
 
+  const getOrderbookZRC1 = async () => {
+    let resp = await zilliqa.blockchain.getSmartContractSubState("a815968e8c549d6b5937976b6b81a5c179f51f47", "orderbook", [])
+    let orderbook = resp.result.orderbook
+    // TODO: set back to account state
+
+    var userOrders: any[] = []
+    for(const [key, value] of Object.entries(orderbook)) {
+      var order: any = value
+      if(order.arguments[0] !== accountState.addressBase16?.toLowerCase()) continue
+      order.listingId = key
+      userOrders.push(order)
+    }
+    
+    setZrc1Orders(userOrders)
+  }
+
   let activeOrders = orders.filter(order => order.arguments[5].constructor.split('.')[1] === 'Active')
+  let activeZrc1Orders = zrc1Orders.filter(order => order.arguments[5].constructor.split('.')[1] === 'Active')
 
   const cancel = async (listingId: any) => {
     const zilPay = (window as any).zilPay
     const contract = zilPay.contracts.at(toBech32Address('0x4e5cb1a8eae44b6e1fe7c9468df1b47f45660c05'))
+
+    const txn = await contract.call(
+      'CancelListing',
+      [
+        {
+          vname: 'item_order_id',
+          type: 'Uint256',
+          value: `${listingId}`,
+        }
+      ],
+      { 
+        amount: 0,
+        nonce: nonce,
+        version: bytes.pack(1,1), // Testnet: bytes.pack(333, 1)
+        gasPrice: new BN(2500000000),
+        gasLimit: Long.fromNumber(5000),
+      },
+      true
+    )
+    txn.id = txn.ID
+    txn.isRejected = function (this: { errors: any[]; exceptions: any[] }) {
+      return this.errors.length > 0 || this.exceptions.length > 0
+    }
+
+    setNonce(nonce+1)
+  }
+
+  const cancelZrc1 = async (listingId: any) => {
+    const zilPay = (window as any).zilPay
+    const contract = zilPay.contracts.at(toBech32Address('0xa815968e8c549d6b5937976b6b81a5c179f51f47'))
 
     const txn = await contract.call(
       'CancelListing',
@@ -94,8 +141,8 @@ const Home: NextPage = () => {
 
       <div className="max-w-xl w-full mt-6">
         <div className="flex items-center font-semibold">
-          <div className="flex-grow">Active listings: {activeOrders.length}</div>
-          <div>Total listings: {orders.length}</div>
+          <div className="flex-grow">Active listings: {activeOrders.length} (ZRC6) + {activeZrc1Orders.length} (ZRC1)</div>
+          <div>Total listings: {orders.length + zrc1Orders.length}</div>
         </div>
         <div className="">
           {activeOrders.map(order => (
@@ -108,7 +155,17 @@ const Home: NextPage = () => {
               </div>
             </div>
           ))}
-          {activeOrders.length === 0 &&
+          {activeZrc1Orders.map(order => (
+            <div key={order.listingId} className="p-2 bg-gray-200 rounded mb-2 flex items-center">
+              <div className="flex-grow">
+                Listing #{order.listingId}
+              </div>
+              <div>
+                <button onClick={() => cancelZrc1(order.listingId)} className="text-blue-500 underline">Cancel listing</button>
+              </div>
+            </div>
+          ))}
+          {activeOrders.length === 0 && activeZrc1Orders.length === 0 &&
             <p className="text-gray-500 italic text-center py-3">You have no active listings on the Sparda marketplace :)</p>
           }
         </div>
